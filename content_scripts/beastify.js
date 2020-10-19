@@ -16,10 +16,6 @@
      */
     function insertBeast() {
         document.addEventListener('click', function (e) {
-            //browser.runtime.sendMessage({
-            //    command: "saveElement",
-            //    content: e.target.className
-            //});
             window.wrappedJSObject.prev = e.target;
             e.target.style.backgroundColor = "#FF0000";
         }, { once: true });
@@ -46,7 +42,7 @@
     browser.runtime.onMessage.addListener(handleMessage);
 
     function handleMessage(message) {
-        if (message.command === "beastify") {
+        if (message.command === "selectContent") {
             if (typeof (window.wrappedJSObject.prev) !== 'undefined')
             {
                 window.wrappedJSObject.prev.style.backgroundColor = "initial";

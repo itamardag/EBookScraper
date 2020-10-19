@@ -1,12 +1,4 @@
 /**
- * CSS to hide everything on the page,
- * except for elements that have the "beastify-image" class.
- */
-const hidePage = `body > :not(.beastify-image) {
-                    display: none;
-                  }`;
-
-/**
  * Listen for clicks on the buttons, and send the appropriate message to
  * the content script in the page.
  */
@@ -14,68 +6,43 @@ function listenForClicks() {
     document.addEventListener("click", (e) => {
 
         /**
-         * Given the name of a beast, get the URL to the corresponding image.
-         */
-        function beastNameToURL(beastName) {
-            switch (beastName) {
-                case "Title":
-                    return browser.extension.getURL("beasts/frog.jpg");
-                case "Body":
-                    return browser.extension.getURL("beasts/snake.jpg");
-                case "Next":
-                    return browser.extension.getURL("beasts/turtle.jpg");
-            }
-        }
-
-        /**
          * Insert the page-hiding CSS into the active tab,
          * then get the beast URL and
          * send a "beastify" message to the content script in the active tab.
          */
-        function beastify(tabs) {
-            let url = beastNameToURL(e.target.textContent);
+        function selectContent(tabs) {
             const sending = browser.tabs.sendMessage(tabs[0].id, {
-                command: "beastify",
-                beastURL: url
+                command: "selectContent",
+                buttonType: e.target.textContent
             });
         }
-
-        //browser.runtime.onMessage.addListener(handleResponse);
-
-        //function handleResponse(message) {
-        //    if (message.command === "saveElement") {
-        //        this.prev = message.content;
-        //    }
-        //    //var element = document.getElementsByClassName(message.content);
-        //    //element.style.backgroundColor = "#E5F2F2";
-        //}
 
         /**
          * Remove the page-hiding CSS from the active tab,
          * send a "reset" message to the content script in the active tab.
          */
         function reset(tabs) {
-            //browser.tabs.removeCSS({ code: hidePage }).then(() => {
-            browser.tabs.sendMessage(tabs[0].id, {
-                command: "reset",
+            browser.tabs.removeCSS({ code: hidePage }).then(() => {
+                browser.tabs.sendMessage(tabs[0].id, {
+                    command: "reset",
+                });
             });
-            //});
         }
 
         /**
          * Just log the error to the console.
          */
         function reportError(error) {
-            console.error(`Could not beastify: ${error}`);
+            console.error(`Could not scrape EBook: ${error}`);
         }
 
         /**
          * Get the active tab,
          * then call "beastify()" or "reset()" as appropriate.
          */
-        if (e.target.classList.contains("beast")) {
+        if (e.target.classList.contains("content")) {
             browser.tabs.query({ active: true, currentWindow: true })
-              .then(beastify)
+              .then(selectContent)
               .catch(reportError);
         }
         else if (e.target.classList.contains("reset")) {
