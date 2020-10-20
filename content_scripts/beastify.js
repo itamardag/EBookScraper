@@ -1,3 +1,9 @@
+fields = Object.freeze({
+    TITLE: 0,
+    BODY: 1,
+    NEXT: 2
+});
+
 (function () {
     /**
      * Check and set a global guard variable.
@@ -14,15 +20,21 @@
      * create and style an IMG node pointing to
      * that image, then insert the node into the document.
      */
-    function insertBeast() {
+    function insertBeast(field) {
         document.addEventListener('click', function (e) {
-            window.wrappedJSObject.prev = e.target;
-            e.target.style.backgroundColor = "#FF0000";
+            window.wrappedJSObject.prev[field] = e.target;
+            switch (field) {
+                case (fields.TITLE):
+                    e.target.style.backgroundColor = "#FF0000";
+                    break;
+                case (fields.BODY):
+                    e.target.style.backgroundColor = "#00FF00";
+                    break;
+                case (fields.NEXT):
+                    e.target.style.backgroundColor = "#0000FF";
+                    break;
+            }
         }, { once: true });
-    }
-
-    function setTargetId(id) {
-
     }
 
     /**
@@ -43,11 +55,15 @@
 
     function handleMessage(message) {
         if (message.command === "selectContent") {
-            if (typeof (window.wrappedJSObject.prev) !== 'undefined')
-            {
-                window.wrappedJSObject.prev.style.backgroundColor = "initial";
+            if (typeof (window.wrappedJSObject.prev) === 'undefined') {
+                window.wrappedJSObject.prev = new Array(Object.keys(fields).length);
             }
-            insertBeast();
+            let field = message.buttonType;
+            if (typeof (window.wrappedJSObject.prev[field]) !== 'undefined')
+            {
+                window.wrappedJSObject.prev[field].style.backgroundColor = "initial";
+            }
+            insertBeast(field);
         } else if (message.command === "reset") {
             removeExistingBeasts();
         }
