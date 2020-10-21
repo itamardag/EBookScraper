@@ -29,7 +29,7 @@ function listenForClicks() {
                     type = 2;
                     break;
             }
-            const sending = browser.tabs.sendMessage(tabs[0].id, {
+            sendMessage({
                 command: "selectContent",
                 buttonType: type
             });
@@ -40,14 +40,25 @@ function listenForClicks() {
          * send a "reset" message to the content script in the active tab.
          */
         function reset(tabs) {
-            browser.tabs.removeCSS({ code: hidePage }).then(() => {
-                browser.tabs.sendMessage(tabs[0].id, {
-                    command: "startParsing",
+                sendMessage({
+                    command: "getFields",
                 });
-            });
         }
 
-        browser.runtime.onMessage.addListener(handleMessage);
+        let port;
+
+        browser.runtime.onConnect.addListener(connected);
+
+        function connected(p)
+        {
+            port = p;
+            p.onMessage.addListener(handleMessage);
+        }
+
+        function sendMessage(message)
+        {
+            port.postMessage(message);
+        }
 
         function handleMessage(message) {
             if (message.command === "classes")
@@ -55,14 +66,14 @@ function listenForClicks() {
                 this.title = message.title;
                 this.body = message.body;
                 this.next = message.next;
-                browser.tabs.sendMessage(tabs[0].id, {
+                sendMessage({
                     command: "fetchTitle",
                     title: this.title
                 });
             }
             else if (message.command === "newPage")
             {
-                browser.tabs.sendMessage(tabs[0].id, {
+                sendMessage({
                     command: "fetchTitle",
                     title: this.title
                 });
@@ -70,7 +81,7 @@ function listenForClicks() {
             else if (message.command === "title")
             {
                 //todo
-                browser.tabs.sendMessage(tabs[0].id, {
+                sendMessage({
                     command: "fetchBody",
                     body: this.body
                 });
@@ -78,7 +89,7 @@ function listenForClicks() {
             else if (message.command === "body")
             {
                 //todo
-                browser.tabs.sendMessage(tabs[0].id, {
+                sendMessage({
                     command: "nextPage",
                     next: this.next
                 });

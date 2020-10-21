@@ -55,20 +55,22 @@ fieldNames = Object.freeze({
         }
 
         for (i in fieldNames) {
-            if (window.wrappedJSObject.prev[fields.TITLE].className === '') {
+            if (window.wrappedJSObject.prev[i].className === '') {
                 alert("Field " + fieldNames[i] + " has no class, please choose again if possible");
                 return;
             }
         }
 
-        browser.runtime.sendMessage(classes);
+        port.postMessage(classes);
     }
+
+    let port = browser.runtime.connect()
 
     /**
      * Listen for messages from the background script.
      * Call "beastify()" or "reset()".
     */
-    browser.runtime.onMessage.addListener(handleMessage);
+    port.onMessage.addListener(handleMessage);
 
     function handleMessage(message) {
         if (message.command === "selectContent") {
@@ -81,7 +83,7 @@ fieldNames = Object.freeze({
                 window.wrappedJSObject.prev[field].style.backgroundColor = "initial";
             }
             pickElement(field);
-        } else if (message.command === "startParsing") {
+        } else if (message.command === "getFields") {
             startParsing();
         }
     }
