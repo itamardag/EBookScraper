@@ -20,18 +20,18 @@ fields = Object.freeze({
      * create and style an IMG node pointing to
      * that image, then insert the node into the document.
      */
-    function insertBeast(field) {
+    function pickElement(field) {
         document.addEventListener('click', function (e) {
             window.wrappedJSObject.prev[field] = e.target;
             switch (field) {
                 case (fields.TITLE):
-                    e.target.style.backgroundColor = "#FF0000";
+                    e.target.style.backgroundColor = "#FFAAAA";
                     break;
                 case (fields.BODY):
-                    e.target.style.backgroundColor = "#00FF00";
+                    e.target.style.backgroundColor = "#AAFFAA";
                     break;
                 case (fields.NEXT):
-                    e.target.style.backgroundColor = "#0000FF";
+                    e.target.style.backgroundColor = "#AAAAFF";
                     break;
             }
         }, { once: true });
@@ -40,7 +40,7 @@ fields = Object.freeze({
     /**
      * Remove every beast from the page.
      */
-    function removeExistingBeasts() {
+    function startParsing() {
         let existingBeasts = document.querySelectorAll(".beastify-image");
         for (let beast of existingBeasts) {
             beast.remove();
@@ -63,9 +63,9 @@ fields = Object.freeze({
             {
                 window.wrappedJSObject.prev[field].style.backgroundColor = "initial";
             }
-            insertBeast(field);
-        } else if (message.command === "reset") {
-            removeExistingBeasts();
+            pickElement(field);
+        } else if (message.command === "startParsing") {
+            startParsing();
         }
     }
 

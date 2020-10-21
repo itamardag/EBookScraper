@@ -42,7 +42,7 @@ function listenForClicks() {
         function reset(tabs) {
             browser.tabs.removeCSS({ code: hidePage }).then(() => {
                 browser.tabs.sendMessage(tabs[0].id, {
-                    command: "reset",
+                    command: "startParsing",
                 });
             });
         }
@@ -78,7 +78,7 @@ function listenForClicks() {
 function reportExecuteScriptError(error) {
     document.querySelector("#popup-content").classList.add("hidden");
     document.querySelector("#error-content").classList.remove("hidden");
-    console.error(`Failed to execute beastify content script: ${error.message}`);
+    console.error(`Failed to execute content script: ${error.message}`);
 }
 
 /**
