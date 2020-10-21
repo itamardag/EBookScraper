@@ -4,6 +4,12 @@ fields = Object.freeze({
     NEXT: 2
 });
 
+fieldNames = Object.freeze({
+    0: "Title",
+    1: "Body",
+    2: "Next"
+});
+
 (function () {
     /**
      * Check and set a global guard variable.
@@ -41,10 +47,21 @@ fields = Object.freeze({
      * Remove every beast from the page.
      */
     function startParsing() {
-        let existingBeasts = document.querySelectorAll(".beastify-image");
-        for (let beast of existingBeasts) {
-            beast.remove();
+        let classes = {
+            command: "classes",
+            title: window.wrappedJSObject.prev[fields.TITLE].className,
+            body: window.wrappedJSObject.prev[fields.BODY].className,
+            next: window.wrappedJSObject.prev[fields.NEXT].className,
         }
+
+        for (i in fieldNames) {
+            if (window.wrappedJSObject.prev[fields.TITLE].className === '') {
+                alert("Field " + fieldNames[i] + " has no class, please choose again if possible");
+                return;
+            }
+        }
+
+        browser.runtime.sendMessage(classes);
     }
 
     /**

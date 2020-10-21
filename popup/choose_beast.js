@@ -47,6 +47,48 @@ function listenForClicks() {
             });
         }
 
+        browser.runtime.onMessage.addListener(handleMessage);
+
+        function handleMessage(message) {
+            if (message.command === "classes")
+            {
+                this.title = message.title;
+                this.body = message.body;
+                this.next = message.next;
+                browser.tabs.sendMessage(tabs[0].id, {
+                    command: "fetchTitle",
+                    title: this.title
+                });
+            }
+            else if (message.command === "newPage")
+            {
+                browser.tabs.sendMessage(tabs[0].id, {
+                    command: "fetchTitle",
+                    title: this.title
+                });
+            }
+            else if (message.command === "title")
+            {
+                //todo
+                browser.tabs.sendMessage(tabs[0].id, {
+                    command: "fetchBody",
+                    body: this.body
+                });
+            }
+            else if (message.command === "body")
+            {
+                //todo
+                browser.tabs.sendMessage(tabs[0].id, {
+                    command: "nextPage",
+                    next: this.next
+                });
+            }
+            else if (message.command === "end")
+            {
+                //todo
+            }
+        }
+
         /**
          * Just log the error to the console.
          */
