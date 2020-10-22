@@ -37,67 +37,12 @@ function listenForClicks() {
 
         /**
          * Remove the page-hiding CSS from the active tab,
-         * send a "reset" message to the content script in the active tab.
-         */
+        * send a "reset" message to the content script in the active tab.
+        */
         function reset(tabs) {
-                sendMessage({
-                    command: "getFields",
-                });
-        }
-
-        let port;
-
-        browser.runtime.onConnect.addListener(connected);
-
-        function connected(p)
-        {
-            port = p;
-            p.onMessage.addListener(handleMessage);
-        }
-
-        function sendMessage(message)
-        {
-            port.postMessage(message);
-        }
-
-        function handleMessage(message) {
-            if (message.command === "classes")
-            {
-                this.title = message.title;
-                this.body = message.body;
-                this.next = message.next;
-                sendMessage({
-                    command: "fetchTitle",
-                    title: this.title
-                });
-            }
-            else if (message.command === "newPage")
-            {
-                sendMessage({
-                    command: "fetchTitle",
-                    title: this.title
-                });
-            }
-            else if (message.command === "title")
-            {
-                //todo
-                sendMessage({
-                    command: "fetchBody",
-                    body: this.body
-                });
-            }
-            else if (message.command === "body")
-            {
-                //todo
-                sendMessage({
-                    command: "nextPage",
-                    next: this.next
-                });
-            }
-            else if (message.command === "end")
-            {
-                //todo
-            }
+            sendMessage({
+                command: "getFields",
+            });
         }
 
         /**
@@ -123,7 +68,7 @@ function listenForClicks() {
         }
     });
 }
-
+    
 /**
  * There was an error executing the script.
  * Display the popup's error message, and hide the normal UI.
@@ -132,6 +77,54 @@ function reportExecuteScriptError(error) {
     document.querySelector("#popup-content").classList.add("hidden");
     document.querySelector("#error-content").classList.remove("hidden");
     console.error(`Failed to execute content script: ${error.message}`);
+}
+
+let port;
+
+browser.runtime.onConnect.addListener(connected);
+
+function connected(p) {
+    port = p;
+    port.onMessage.addListener(handleMessage);
+}
+
+function sendMessage(message) {
+    port.postMessage(message);
+}
+
+function handleMessage(message) {
+    if (message.command === "classes") {
+        this.title = message.title;
+        this.body = message.body;
+        this.next = message.next;
+        sendMessage({
+            command: "fetchTitle",
+            title: this.title
+        });
+    }
+    else if (message.command === "newPage") {
+        sendMessage({
+            command: "fetchTitle",
+            title: this.title
+        });
+    }
+    else if (message.command === "title") {
+        //todo
+        sendMessage({
+            command: "fetchBody",
+            body: this.body
+        });
+    }
+    else if (message.command === "body") {
+        //todo
+        sendMessage({
+            command: "nextPage",
+            next: this.next
+        });
+    }
+    else if (message.command === "end") {
+        //todo
+    }
 }
 
 /**
