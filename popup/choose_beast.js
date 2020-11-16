@@ -79,14 +79,41 @@ function reportExecuteScriptError(error) {
     console.error(`Failed to execute content script: ${error.message}`);
 }
 
+/**
+ * When the popup loads, inject a content script into the active tab,
+ * and add a click handler.
+ * If we couldn't inject the script, handle the error.
+ */
+browser.tabs.executeScript({ file: "/content_scripts/beastify.js" })
+.then(listenForClicks)
+.catch(reportExecuteScriptError);
+
+
+//browser.runtime.onConnect.addListener(connected);
+
+//function connected(p) {
+//    port = p;
+//    port.onMessage.addListener(handleMessage);
+//}
+
 let port;
+let tabId;
 
-browser.runtime.onConnect.addListener(connected);
-
-function connected(p) {
-    port = p;
+function connectToTab(tabs) {
+    tabId = tabs[0].id;
+    port = browser.tabs.connect(tabId);
     port.onMessage.addListener(handleMessage);
 }
+
+function onError(e) {
+    console.log('Error connecting port: ${e}');
+}
+
+var gettingCurrent = browser.tabs.query({
+    currentWindow: true, active: true
+});
+
+gettingCurrent.then(connectToTab, onError);
 
 function sendMessage(message) {
     port.postMessage(message);
@@ -97,12 +124,6 @@ function handleMessage(message) {
         this.title = message.title;
         this.body = message.body;
         this.next = message.next;
-        sendMessage({
-            command: "fetchTitle",
-            title: this.title
-        });
-    }
-    else if (message.command === "newPage") {
         sendMessage({
             command: "fetchTitle",
             title: this.title
@@ -122,16 +143,34 @@ function handleMessage(message) {
             next: this.next
         });
     }
+    else if (message.command === "newPage") {
+        const loadingTab = goToUrl(tabId, message.url)
+        loadingTab.then(function f(tabInfo) {
+            const loadingScript = browser.tabs.executeScript(tabId, { file: "/content_scripts/beastify.js" });
+            loadingScript.then(function f() {
+                port = browser.tabs.connect(tabId);
+                port.onMessage.addListener(handleMessage);
+                sendMessage({
+                    command: "fetchTitle",
+                    title: this.title
+                });
+            })
+            .catch(reportExecuteScriptError);
+        });
+    }
     else if (message.command === "end") {
         //todo
     }
 }
 
-/**
- * When the popup loads, inject a content script into the active tab,
- * and add a click handler.
- * If we couldn't inject the script, handle the error.
- */
-browser.tabs.executeScript({ file: "/content_scripts/beastify.js" })
-.then(listenForClicks)
-.catch(reportExecuteScriptError);
+function goToUrl(tab, url) {
+    browser.tabs.update(tab, { url });
+    return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function onUpdated(id, info) {
+            if (id === tab && info.status === 'complete') {
+                browser.tabs.onUpdated.removeListener(onUpdated);
+                resolve();
+            }
+        });
+    });
+}

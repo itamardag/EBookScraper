@@ -64,13 +64,19 @@ fieldNames = Object.freeze({
         port.postMessage(classes);
     }
 
-    let port = browser.runtime.connect()
+    let port;
+    browser.runtime.onConnect.addListener(connected);
+
+    function connected(p) {
+        port = p;
+        port.onMessage.addListener(handleMessage);
+    }
 
     /**
      * Listen for messages from the background script.
      * Call "beastify()" or "reset()".
     */
-    port.onMessage.addListener(handleMessage);
+    //port.onMessage.addListener(handleMessage);
 
     function handleMessage(message) {
         if (message.command === "selectContent") {
@@ -85,6 +91,18 @@ fieldNames = Object.freeze({
             pickElement(field);
         } else if (message.command === "getFields") {
             startParsing();
+        } else if (message.command === "fetchTitle") {
+            let title = document.getElementsByClassName(message.title);
+            port.postMessage({command: "title", text: title[0].innerHTML});
+        } else if (message.command === "fetchBody") {
+            let body = document.getElementsByClassName(message.body);
+            port.postMessage({command: "body", text: body[0].innerHTML});
+        } else if (message.command === "nextPage") {
+            //todo: if no element exists send end message
+            let nextButton = document.getElementsByClassName(message.next);
+            let nextText = nextButton[0].innerHTML;
+            var href = nextText.match(/href="([^"]*)/)[1];
+            port.postMessage({command: "newPage", url: href});
         }
     }
 
