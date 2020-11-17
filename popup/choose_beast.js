@@ -9,6 +9,7 @@ fields = Object.freeze({
  * the content script in the page.
  */
 function listenForClicks() {
+    attemptConnection();
 
     document.addEventListener("click", (e) => {
         /**
@@ -79,6 +80,12 @@ function reportExecuteScriptError(error) {
     console.error(`Failed to execute content script: ${error.message}`);
 }
 
+
+let port;
+let tabId;
+let folder;
+
+
 /**
  * When the popup loads, inject a content script into the active tab,
  * and add a click handler.
@@ -87,17 +94,6 @@ function reportExecuteScriptError(error) {
 browser.tabs.executeScript({ file: "/content_scripts/beastify.js" })
 .then(listenForClicks)
 .catch(reportExecuteScriptError);
-
-
-//browser.runtime.onConnect.addListener(connected);
-
-//function connected(p) {
-//    port = p;
-//    port.onMessage.addListener(handleMessage);
-//}
-
-let port;
-let tabId;
 
 function connectToTab(tabs) {
     tabId = tabs[0].id;
@@ -109,11 +105,12 @@ function onError(e) {
     console.log('Error connecting port: ${e}');
 }
 
-var gettingCurrent = browser.tabs.query({
-    currentWindow: true, active: true
-});
-
-gettingCurrent.then(connectToTab, onError);
+function attemptConnection() {
+    var gettingCurrent = browser.tabs.query({
+        currentWindow: true, active: true
+    });
+    gettingCurrent.then(connectToTab, onError);
+}
 
 function sendMessage(message) {
     port.postMessage(message);
@@ -125,19 +122,16 @@ function handleMessage(message) {
         this.body = message.body;
         this.next = message.next;
         sendMessage({
-            command: "fetchTitle",
-            title: this.title
-        });
-    }
-    else if (message.command === "title") {
-        //todo
-        sendMessage({
-            command: "fetchBody",
+            command: "fetchChapter",
+            title: this.title,
             body: this.body
         });
+        folder = message.href.match(/https?:\/\/(www)?([^\/]*)/)[2] + "/";
     }
-    else if (message.command === "body") {
-        //todo
+    else if (message.command === "chapter") {
+        const chapterBlob = new Blob(createChapter(message.titleText, message.bodyText));
+        const chapterURL = URL.createObjectURL(chapterBlob);
+        browser.downloads.download({ url: chapterURL, filename: folder + message.titleText + ".html"});
         sendMessage({
             command: "nextPage",
             next: this.next
@@ -151,8 +145,9 @@ function handleMessage(message) {
                 port = browser.tabs.connect(tabId);
                 port.onMessage.addListener(handleMessage);
                 sendMessage({
-                    command: "fetchTitle",
-                    title: this.title
+                    command: "fetchChapter",
+                    title: this.title,
+                    body: this.body
                 });
             })
             .catch(reportExecuteScriptError);
@@ -161,6 +156,15 @@ function handleMessage(message) {
     else if (message.command === "end") {
         //todo
     }
+}
+
+function createChapter(body, title)
+{
+    //let preTitle = "<chapter${chapterNum}>\n<h2 id=\"ch${chapterNum}\">";
+    //let preBody = "</h2>\n<body>"
+    //let postBody = "</body>\n</chapter${chapterNum}>"
+    //return preTitle + "\"" + title + "\"" + preBody + "\"" + body + "\"" + postBody;
+    return [title, body];
 }
 
 function goToUrl(tab, url) {

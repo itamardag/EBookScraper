@@ -52,6 +52,7 @@ fieldNames = Object.freeze({
             title: window.wrappedJSObject.prev[fields.TITLE].className,
             body: window.wrappedJSObject.prev[fields.BODY].className,
             next: window.wrappedJSObject.prev[fields.NEXT].className,
+            href: getURL(window.wrappedJSObject.prev[fields.NEXT])
         }
 
         for (i in fieldNames) {
@@ -91,19 +92,21 @@ fieldNames = Object.freeze({
             pickElement(field);
         } else if (message.command === "getFields") {
             startParsing();
-        } else if (message.command === "fetchTitle") {
+        } else if (message.command === "fetchChapter") {
             let title = document.getElementsByClassName(message.title);
-            port.postMessage({command: "title", text: title[0].innerHTML});
-        } else if (message.command === "fetchBody") {
             let body = document.getElementsByClassName(message.body);
-            port.postMessage({command: "body", text: body[0].innerHTML});
+            port.postMessage({ command: "chapter", titleText: title[0].innerHTML, bodyText: body[0].innerHTML });
         } else if (message.command === "nextPage") {
             //todo: if no element exists send end message
             let nextButton = document.getElementsByClassName(message.next);
-            let nextText = nextButton[0].innerHTML;
-            var href = nextText.match(/href="([^"]*)/)[1];
-            port.postMessage({command: "newPage", url: href});
+            port.postMessage({command: "newPage", url: getURL(nextButton[0])});
         }
+    }
+
+    function getURL(link)
+    {
+        let nextText = link.innerHTML;
+        return nextText.match(/href="([^"]*)/)[1];
     }
 
 })();
