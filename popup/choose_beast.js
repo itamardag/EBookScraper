@@ -84,6 +84,7 @@ function reportExecuteScriptError(error) {
 let port;
 let tabId;
 let folder;
+let chapterNum = 0;
 
 
 /**
@@ -129,9 +130,9 @@ function handleMessage(message) {
         folder = message.href.match(/https?:\/\/(www)?([^\/]*)/)[2] + "/";
     }
     else if (message.command === "chapter") {
-        const chapterBlob = new Blob(createChapter(message.titleText, message.bodyText));
+        const chapterBlob = new Blob(createChapter(message.titleText, message.bodyText, ++chapterNum));
         const chapterURL = URL.createObjectURL(chapterBlob);
-        browser.downloads.download({ url: chapterURL, filename: folder + message.titleText + ".html"});
+        browser.downloads.download({ url: chapterURL, filename: folder + "chapter " + chapterNum + " - " + message.titleText + ".html" });
         sendMessage({
             command: "nextPage",
             next: this.next
@@ -158,13 +159,12 @@ function handleMessage(message) {
     }
 }
 
-function createChapter(body, title)
+function createChapter(title, body, num)
 {
-    //let preTitle = "<chapter${chapterNum}>\n<h2 id=\"ch${chapterNum}\">";
-    //let preBody = "</h2>\n<body>"
-    //let postBody = "</body>\n</chapter${chapterNum}>"
-    //return preTitle + "\"" + title + "\"" + preBody + "\"" + body + "\"" + postBody;
-    return [title, body];
+    let preTitle = "<chapter" + num + ">\n<h2 id=\"ch" + num + "\">";
+    let preBody = "</h2>\n<body>"
+    let postBody = "</body>\n</chapter" + num + ">"
+    return [preTitle, title, preBody, body, postBody];
 }
 
 function goToUrl(tab, url) {
