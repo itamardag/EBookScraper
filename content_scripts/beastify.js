@@ -97,9 +97,13 @@ fieldNames = Object.freeze({
             let body = document.getElementsByClassName(message.body);
             port.postMessage({ command: "chapter", titleText: title[0].innerHTML, bodyText: body[0].innerHTML });
         } else if (message.command === "nextPage") {
-            //todo: if no element exists send end message
             let nextButton = document.getElementsByClassName(message.next);
-            port.postMessage({command: "newPage", url: getURL(nextButton[0])});
+            if (nextButton == null || nextButton[0].innerHTML == "") {
+                port.postMessage({ command: "end" });
+            }
+            else {
+                port.postMessage({ command: "newPage", url: getURL(nextButton[0]) });
+            }
         }
     }
 

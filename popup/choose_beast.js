@@ -69,7 +69,7 @@ function listenForClicks() {
         }
     });
 }
-    
+
 /**
  * There was an error executing the script.
  * Display the popup's error message, and hide the normal UI.
@@ -155,7 +155,7 @@ function handleMessage(message) {
         });
     }
     else if (message.command === "end") {
-        //todo
+        window.alert("Book Download Complete!");
     }
 }
 
