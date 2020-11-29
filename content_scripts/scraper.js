@@ -47,17 +47,32 @@ fieldNames = Object.freeze({
      * Remove every beast from the page.
      */
     function startParsing() {
+        let types = new Array(Object.keys(fields).length);
+        let values = new Array(Object.keys(fields).length);
+        for (i in Object.values(fields))
+        {
+            if (window.wrappedJSObject.prev[i].id === "") {
+                types[i] = "class";
+                values[i] = window.wrappedJSObject.prev[i].className;
+            } else {
+                types[i] = "id";
+                values[i] = window.wrappedJSObject.prev[i].id;
+            }
+        }
         let classes = {
-            command: "classes",
-            title: window.wrappedJSObject.prev[fields.TITLE].className,
-            body: window.wrappedJSObject.prev[fields.BODY].className,
-            next: window.wrappedJSObject.prev[fields.NEXT].className,
+            command: "identifiers",
+            titleType: types[fields.TITLE],
+            title: values[fields.TITLE],
+            bodyType: types[fields.BODY],
+            body: values[fields.BODY],
+            nextType: types[fields.NEXT],
+            next: values[fields.NEXT],
             href: getURL(window.wrappedJSObject.prev[fields.NEXT])
         }
 
         for (i in fieldNames) {
-            if (window.wrappedJSObject.prev[i].className === '') {
-                alert("Field " + fieldNames[i] + " has no class, please choose again if possible");
+            if (window.wrappedJSObject.prev[i].className === '' && window.wrappedJSObject.prev[i].id === '') {
+                alert("Field " + fieldNames[i] + " has no identifier, please choose again if possible");
                 return;
             }
         }
@@ -82,11 +97,26 @@ fieldNames = Object.freeze({
         if (message.command === "getFields") {
             startParsing();
         } else if (message.command === "fetchChapter") {
-            let title = document.getElementsByClassName(message.title);
-            let body = document.getElementsByClassName(message.body);
+            let title;
+            let body;
+            if (message.titleType == "id") {
+                title = document.getElementById(message.title);
+            } else {
+                title = document.getElementsByClassName(message.title);
+            }
+            if (message.bodyType == "id") {
+                body = document.getElementById(message.body);
+            } else {
+                body = document.getElementsByClassName(message.body);
+            }
             port.postMessage({ command: "chapter", titleText: title[0].innerHTML, bodyText: body[0].innerHTML });
         } else if (message.command === "nextPage") {
-            let nextButton = document.getElementsByClassName(message.next);
+            let nextButton;
+            if (message.nextType == "id") {
+                nextButton = document.getElementById(message.next);
+            } else {
+                nextButton = document.getElementsByClassName(message.next);
+            }
             if (nextButton == null || nextButton[0].innerHTML == "") {
                 port.postMessage({ command: "end" });
             }
