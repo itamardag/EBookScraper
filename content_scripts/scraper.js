@@ -70,27 +70,16 @@ fieldNames = Object.freeze({
 
     function connected(p) {
         port = p;
-        port.onMessage.addListener(handleMessage);
+        port.onMessage.addListener(handleDownloadMessage);
     }
 
     /**
      * Listen for messages from the background script.
      * Call "beastify()" or "reset()".
     */
-    //port.onMessage.addListener(handleMessage);
 
-    function handleMessage(message) {
-        if (message.command === "selectContent") {
-            if (typeof (window.wrappedJSObject.prev) === 'undefined') {
-                window.wrappedJSObject.prev = new Array(Object.keys(fields).length);
-            }
-            let field = message.buttonType;
-            if (typeof (window.wrappedJSObject.prev[field]) !== 'undefined')
-            {
-                window.wrappedJSObject.prev[field].style.backgroundColor = "initial";
-            }
-            pickElement(field);
-        } else if (message.command === "getFields") {
+    function handleDownloadMessage(message) {
+        if (message.command === "getFields") {
             startParsing();
         } else if (message.command === "fetchChapter") {
             let title = document.getElementsByClassName(message.title);
@@ -104,6 +93,21 @@ fieldNames = Object.freeze({
             else {
                 port.postMessage({ command: "newPage", url: getURL(nextButton[0]) });
             }
+        }
+    }
+
+    browser.runtime.onMessage.addListener(handleElementsMessage);
+
+    function handleElementsMessage(message) {
+        if (message.command === "selectContent") {
+            if (typeof (window.wrappedJSObject.prev) === 'undefined') {
+                window.wrappedJSObject.prev = new Array(Object.keys(fields).length);
+            }
+            let field = message.buttonType;
+            if (typeof (window.wrappedJSObject.prev[field]) !== 'undefined') {
+                window.wrappedJSObject.prev[field].style.backgroundColor = "initial";
+            }
+            pickElement(field);
         }
     }
 

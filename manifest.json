@@ -1,13 +1,13 @@
 {
-
     "manifest_version": 2,
-    "name": "Beastify",
+    "name": "E-Book Scraper",
     "version": "1.0",
-
-    "description": "Adds a browser action icon to the toolbar. Click the button to choose a beast. The active tab's body content is then replaced with a picture of the chosen beast. See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Examples#beastify",
-    "homepage_url": "https://github.com/mdn/webextensions-examples/tree/master/beastify",
+    // icon credit -
+    // <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+    "description": "...",
+    "homepage_url": "https://github.com/itamardag/EBookScraper",
     "icons": {
-        "48": "icons/beasts-48.png"
+        "64": "icons/e-book-icon-64.png"
     },
 
     "permissions": [
@@ -17,12 +17,12 @@
     ],
 
     "browser_action": {
-        "default_icon": "icons/beasts-32.png",
-        "default_title": "Beastify",
-        "default_popup": "popup/choose_beast.html"
+        "default_icon": "icons/e-book-icon-32.png",
+        "default_title": "E-Book Scraper",
+        "default_popup": "popup/choose_elements.html"
     },
 
     "background": {
-        "scripts": [ "download_ebook.js" ]
+        "scripts": [ "background_scripts/download_ebook.js" ]
     }
 }
