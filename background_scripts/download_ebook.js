@@ -30,6 +30,7 @@ function handleMessage(message) {
         this.bodyType = message.bodyType;
         this.body = message.body;
         this.nextType = message.nextType;
+        this.nextTag = message.nextTag;
         this.next = message.next;
         sendMessage({
             command: "fetchChapter",
@@ -38,17 +39,21 @@ function handleMessage(message) {
             bodyType: this.bodyType,
             body: this.body
         });
-        folder = message.href.match(/https?:\/\/(www)?([^\/]*)/)[2] + "/";
+        folder = message.href.match(/https?:\/\/(www.)?([^\/]*)/)[2] + "/";
     }
     else if (message.command === "chapter") {
         let chapterText = createChapter(message.titleText, message.bodyText, ++chapterNum);
         fullBook = fullBook.concat(chapterText);
         const chapterBlob = new Blob(chapterText);
         const chapterURL = URL.createObjectURL(chapterBlob);
-        browser.downloads.download({ url: chapterURL, filename: folder + "chapter " + chapterNum + " - " + message.titleText + ".html" });
+        let titleText = message.titleText.replace("\n", " ");
+        titleText = titleText.replace(/<.*>/, "");
+        titleText = titleText.replace(/\/|\\|\?|\*|\||"|:/, "");
+        browser.downloads.download({ url: chapterURL, filename: folder + "chapter " + chapterNum + " - " + titleText + ".html" });
         sendMessage({
             command: "nextPage",
             nextType: this.nextType,
+            nextTag: this.nextTag,
             next: this.next
         });
     }

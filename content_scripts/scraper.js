@@ -49,33 +49,31 @@ fieldNames = Object.freeze({
     function startParsing() {
         let types = new Array(Object.keys(fields).length);
         let values = new Array(Object.keys(fields).length);
+        let tagName = "";
         for (i in Object.values(fields))
         {
-            if (window.wrappedJSObject.prev[i].id === "") {
+            if (window.wrappedJSObject.prev[i].id !== "") {
+                types[i] = "id";
+                values[i] = window.wrappedJSObject.prev[i].id;
+            } else if (window.wrappedJSObject.prev[i].className !== "") {
                 types[i] = "class";
                 values[i] = window.wrappedJSObject.prev[i].className;
             } else {
-                types[i] = "id";
-                values[i] = window.wrappedJSObject.prev[i].id;
+                if (i === fields.BODY.toString()) {
+                    alert("The text body has no identifier, can't download this book");
+                    return;
+                }
+                if (i === fields.NEXT.toString()) {
+                    types[i] = "content";
+                    values[i] = window.wrappedJSObject.prev[fields.NEXT].textContent;
+                    tagName = window.wrappedJSObject.prev[fields.NEXT].tagName;
+                }
             }
-        }
-        let classes = {
-            command: "identifiers",
-            titleType: types[fields.TITLE],
-            title: values[fields.TITLE],
-            bodyType: types[fields.BODY],
-            body: values[fields.BODY],
-            nextType: types[fields.NEXT],
-            next: values[fields.NEXT],
-            href: getURL(window.wrappedJSObject.prev[fields.NEXT])
         }
 
-        for (i in fieldNames) {
-            if (window.wrappedJSObject.prev[i].className === '' && window.wrappedJSObject.prev[i].id === '') {
-                alert("Field " + fieldNames[i] + " has no identifier, please choose again if possible");
-                return;
-            }
-        }
+        let classes = { command: "identifiers", titleType: types[fields.TITLE], title: values[fields.TITLE],
+            bodyType: types[fields.BODY], body: values[fields.BODY], nextType: types[fields.NEXT],
+            nextTag: tagName, next: values[fields.NEXT], href: window.location.href }
 
         port.postMessage(classes);
     }
@@ -97,33 +95,47 @@ fieldNames = Object.freeze({
         if (message.command === "getFields") {
             startParsing();
         } else if (message.command === "fetchChapter") {
-            let title;
-            let body;
-            if (message.titleType == "id") {
-                title = document.getElementById(message.title);
-            } else {
-                title = document.getElementsByClassName(message.title);
-            }
-            if (message.bodyType == "id") {
-                body = document.getElementById(message.body);
-            } else {
-                body = document.getElementsByClassName(message.body);
-            }
-            port.postMessage({ command: "chapter", titleText: title[0].innerHTML, bodyText: body[0].innerHTML });
+            let title = getElement(message.title, message.titleType, "");
+            let body = getElement(message.body, message.bodyType, "");
+            port.postMessage({ command: "chapter", titleText: getContent(title), bodyText: getContent(body) });
         } else if (message.command === "nextPage") {
-            let nextButton;
-            if (message.nextType == "id") {
-                nextButton = document.getElementById(message.next);
-            } else {
-                nextButton = document.getElementsByClassName(message.next);
-            }
-            if (nextButton == null || nextButton[0].innerHTML == "") {
+            let nextButton = getElement(message.next, message.nextType, message.nextTag);
+            if (typeof(nextButton) === "undefined" || getURL(nextButton) === "") {
                 port.postMessage({ command: "end" });
-            }
-            else {
-                port.postMessage({ command: "newPage", url: getURL(nextButton[0]) });
+            } else {
+                port.postMessage({ command: "newPage", url: getURL(nextButton) });
             }
         }
+    }
+
+    function getElement(identifier, identifierType, tagName) {
+        if (identifierType === "id") {
+            return document.getElementById(identifier);
+        } else if (identifierType === "class") {
+            return document.getElementsByClassName(identifier);
+        } else if (identifierType === "content") {
+            let tags = document.getElementsByTagName(tagName);
+            for (i = 0; i < tags.length; i++) {
+                if (tags[i].textContent == identifier) {
+                    return tags[i];
+                }
+            }
+        }
+    }
+
+    function getContent(element) {
+        if (typeof(element) === "undefined") {
+            return "";
+        }
+        let content = element.innerHTML;
+        if (typeof(content) === "undefined") {
+            try {
+                content = element[0].innerHTML;
+            } catch (err2) {
+                return "";
+            }
+        }
+        return content;
     }
 
     browser.runtime.onMessage.addListener(handleElementsMessage);
@@ -143,8 +155,29 @@ fieldNames = Object.freeze({
 
     function getURL(link)
     {
-        let nextText = link.innerHTML;
-        return nextText.match(/href="([^"]*)/)[1];
+        let resultUrl;
+        if (typeof (link.href !== "undefined")) {
+            resultUrl = link.href;
+        } else {
+            let nextText = link.innerHTML;
+            if (typeof (nextText) === "undefined") {
+                try {
+                    nextText = link[0].innerHTML;
+                } catch (err2) {
+                    return "";
+                }
+            }
+            try {
+                resultUrl = nextText.match(/href="([^"]*)/)[1];
+            } catch (err) {
+                return "";
+            }
+        }
+        if (resultUrl.startsWith("..")) {
+            return window.location.href.match(/(.*\/).+/)[1] + resultUrl.match(/.*\/(.+)/)[1];
+        } else {
+            return resultUrl;
+        }
     }
 
 })();
