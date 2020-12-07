@@ -65,7 +65,7 @@ fieldNames = Object.freeze({
                 }
                 if (i === fields.NEXT.toString()) {
                     types[i] = "content";
-                    values[i] = window.wrappedJSObject.prev[fields.NEXT].textContent;
+                    values[i] = window.wrappedJSObject.prev[fields.NEXT].textContent.replace(/\n| /g, "");
                     tagName = window.wrappedJSObject.prev[fields.NEXT].tagName;
                 }
             }
@@ -116,7 +116,7 @@ fieldNames = Object.freeze({
         } else if (identifierType === "content") {
             let tags = document.getElementsByTagName(tagName);
             for (i = 0; i < tags.length; i++) {
-                if (tags[i].textContent == identifier) {
+                if (tags[i].textContent.replace(/\n| /g, "") === identifier) {
                     return tags[i];
                 }
             }

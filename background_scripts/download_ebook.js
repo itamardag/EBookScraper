@@ -46,9 +46,9 @@ function handleMessage(message) {
         fullBook = fullBook.concat(chapterText);
         const chapterBlob = new Blob(chapterText);
         const chapterURL = URL.createObjectURL(chapterBlob);
-        let titleText = message.titleText.replace("\n", " ");
-        titleText = titleText.replace(/<.*>/, "");
-        titleText = titleText.replace(/\/|\\|\?|\*|\||"|:/, "");
+        let titleText = message.titleText.replace(/\n/g, " ");
+        titleText = titleText.replace(/<.*>/g, "");
+        titleText = titleText.replace(/\/|\\|\?|\*|\||"|:/g, "");
         browser.downloads.download({ url: chapterURL, filename: folder + "chapter " + chapterNum + " - " + titleText + ".html" });
         sendMessage({
             command: "nextPage",
