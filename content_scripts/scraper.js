@@ -21,10 +21,24 @@ fieldNames = Object.freeze({
     }
     window.hasRun = true;
 
+    let port;
+    browser.runtime.onConnect.addListener(connected);
+    
     /**
-     * Given a URL to a beast image, remove all existing beasts, then
-     * create and style an IMG node pointing to
-     * that image, then insert the node into the document.
+     * Listen for messages from the background download script over the port.
+     */
+    function connected(p) {
+        port = p;
+        port.onMessage.addListener(handleDownloadMessage);
+    }
+
+    /** 
+     * Listen for messages from the popup script.
+     */
+    browser.runtime.onMessage.addListener(handleElementsMessage);
+
+    /**
+     * Listen for clicks on the tab, change the background of the clicked element to a unique color for each field, and save the clicked element.
      */
     function pickElement(field) {
         document.addEventListener('click', function (e) {
@@ -44,7 +58,11 @@ fieldNames = Object.freeze({
     }
 
     /**
-     * Remove every beast from the page.
+     * Gets identifiers of each field if possible, and posts them on the port.
+     * If the field has ID it will be used, else if it has a Class it will be used.
+     * If title has no identifier a generic "Chapter #num" title will be used.
+     * If body has no identifier the operation fails.
+     * If next has no identifier it will be searched using the tag and text content of the "next" button / link.
      */
     function startParsing() {
         let types = new Array(Object.keys(fields).length);
@@ -71,26 +89,17 @@ fieldNames = Object.freeze({
             }
         }
 
-        let classes = { command: "identifiers", titleType: types[fields.TITLE], title: values[fields.TITLE],
+        let identifiers = { command: "identifiers", titleType: types[fields.TITLE], title: values[fields.TITLE],
             bodyType: types[fields.BODY], body: values[fields.BODY], nextType: types[fields.NEXT],
             nextTag: tagName, next: values[fields.NEXT], href: window.location.href }
 
-        port.postMessage(classes);
-    }
-
-    let port;
-    browser.runtime.onConnect.addListener(connected);
-
-    function connected(p) {
-        port = p;
-        port.onMessage.addListener(handleDownloadMessage);
+        port.postMessage(identifiers);
     }
 
     /**
-     * Listen for messages from the background script.
-     * Call "beastify()" or "reset()".
-    */
-
+     * Handle download related messages.
+     * Fetch relevant element and post the content over the port.
+     */
     function handleDownloadMessage(message) {
         if (message.command === "getFields") {
             startParsing();
@@ -108,6 +117,11 @@ fieldNames = Object.freeze({
         }
     }
 
+    /**
+     * Get element using an identifier.
+     * If identifier is ID or Class find the element using this property.
+     * If identifier is content (=next button without identifier) iterate over elements with the given tag and search for the text content.
+     */
     function getElement(identifier, identifierType, tagName) {
         if (identifierType === "id") {
             return document.getElementById(identifier);
@@ -123,6 +137,10 @@ fieldNames = Object.freeze({
         }
     }
 
+    /**
+     * Get the content of an HTML element.
+     * Usually the content is at element.innerHTML, but sometimes at element[0].innerHTML. If both fail, returns empty content.
+     */
     function getContent(element) {
         if (typeof(element) === "undefined") {
             return "";
@@ -137,9 +155,11 @@ fieldNames = Object.freeze({
         }
         return content;
     }
-
-    browser.runtime.onMessage.addListener(handleElementsMessage);
-
+    
+    /**
+     * Handle element picking related messages.
+     * Restore original background of the element if it was previously picked, and pick a new element.
+     */
     function handleElementsMessage(message) {
         if (message.command === "selectContent") {
             if (typeof (window.wrappedJSObject.prev) === 'undefined') {
@@ -153,6 +173,11 @@ fieldNames = Object.freeze({
         }
     }
 
+    /**
+     * Get URL from a link html.
+     * Tries href field, if it does not exist tries to get a link from "href=" content of innerHTML. If both fail, returns empty link which will end the process.
+     * If the resulting link is given as "../chapter" replaces ".." with the relevant part from current URL.
+     */
     function getURL(link)
     {
         let resultUrl;

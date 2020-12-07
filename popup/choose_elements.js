@@ -5,16 +5,14 @@ fields = Object.freeze({
 });
 
 /**
- * Listen for clicks on the buttons, and send the appropriate message to
+ * Listen for clicks on the popup buttons, and send the appropriate message to
  * the content script in the page.
  */
 function listenForClicks() {
 
     document.addEventListener("click", (e) => {
         /**
-         * Insert the page-hiding CSS into the active tab,
-         * then get the beast URL and
-         * send a "beastify" message to the content script in the active tab.
+         * Sends a message to pick an element for the relevant field.
          */
         function selectContent(tabs) {
             let type = -1;
@@ -36,10 +34,9 @@ function listenForClicks() {
         }
 
         /**
-         * Remove the page-hiding CSS from the active tab,
-        * send a "reset" message to the content script in the active tab.
-        */
-        function reset(tabs) {
+         * Attempts to open port between background page and content script, which also starts the nook download.
+         */
+        function download(tabs) {
             var page = browser.extension.getBackgroundPage();
             page.attemptConnection(tabs[0].id);
         }
@@ -53,7 +50,7 @@ function listenForClicks() {
 
         /**
          * Get the active tab,
-         * then call "beastify()" or "reset()" as appropriate.
+         * then call "selectContent()" or "doanload()" as appropriate.
          */
         if (e.target.classList.contains("content")) {
             browser.tabs.query({ active: true, currentWindow: true })
@@ -62,7 +59,7 @@ function listenForClicks() {
         }
         else if (e.target.classList.contains("download")) {
             browser.tabs.query({ active: true, currentWindow: true })
-              .then(reset)
+              .then(download)
               .catch(reportError);
         }
     });
