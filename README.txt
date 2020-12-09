@@ -1,4 +1,4 @@
-This is an extension to firefox (developed for v83) that downloads Ebooks from sites in blogpost format.
+This is an extension for firefox (developed for v83) that downloads Ebooks from sites in blogpost format.
 For a more detailed description and security warnings, see Description.txt. For license see LICENSE.
 
 To use this extension, add it as a temporary extension to firefox.
