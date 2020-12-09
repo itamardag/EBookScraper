@@ -1,0 +1,26 @@
+This extension downloads a text in blogpost format as an html ready to load to E-Book readers using software like Calibre (https://calibre-ebook.com/).
+The popup lets the user pick a field - chapter title, chapter body, and next.
+Each of those wait for the user to click on a relevant element in the webpage.
+After all fields were picked correctly (picked fields are indicated by different background color for the HTML elements) the user can click download.
+The extension then extracts the contents of the fields, and downloads the chapter under the relevant title.
+After this, the next page is loaded, and the process is repeated untill there is no next chapter.
+When the extension gets to the last page it downloads a fullbook file.
+The user can either load the fullbook file as is to an E-Book reader, or use a program like Sigil (https://sigil-ebook.com/) with the chapter files to create a cleaner E-Book.
+
+The extension is composed of two background scripts and one content script.
+The first background script controls the popup, and sends the content script messages regarding which field should be picked.
+When the user clicks download, a port is opened between the content script and the background page.
+After the content scripts passes the page content to the background page, the background page downloads the content to a "Chapter #Num - Title" file, and the next page is loaded.
+Because the content script needs to be injected into the new page, an <all_urls> permission is required. I have tried circumventing this, but unfortunately found no way to do so, since the extension needs to run on every website, and I did not want to have the user click on every page for permission.
+This however, creates a security vulnerability - a malicious URL could be inseted as the "next" url, and serve as a way to download malware or to launch a phising attack.
+Moreover, a malicious code with some privileges not enough privilege to download files (such as content scripts) could potentially chage the page content that will then be downloaded as html by the extension.
+For this reason, users should be careful when using the extension - 
+Safety measure that should be taken include only downloading content from trusted websites, never running any file downloaded during the proccess (including the htmls - they are meant to be read and not run). In addition, users should be careful if the htmls or the extension opens any webpage that is not a part of the downloaded text.
+This extension downloads only HTML files to a specific location and with a specific naming pattern, any other file should not be trusted.
+
+Downloading a sequence of chapters is a tricky task - every blogpost has a different structure, and identifiying the right elemnt might be impossible.
+In this extension I used a method that worked on a collection of sites I examined, but might not fit every site - 
+This is done by searching for elements with the same identifiers as the user picked elements.
+The extension tries to pick elements by ID if possible, or by Class if there is no ID.
+For the next button, if both ID and Class are undefined, the extension looks for an elemnt with the same tag and same text content as the user picked "next" element.
+I do not know if there is a general solution that would work for all sites, but this private solution works prety well.
