@@ -1,5 +1,5 @@
 This is an extension to firefox (developed for v83) that downloads Ebooks from sites in blogpost format.
-For a more detailed dexcription and security warnings, see Description.txt. For license see LICENSE.
+For a more detailed description and security warnings, see Description.txt. For license see LICENSE.
 
 To use this extension, add it as a temporary extension to firefox.
 Pick each of the three fields in the popup - click on the desired button, and then click on the relevant element in the webpage.
