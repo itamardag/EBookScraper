@@ -192,7 +192,7 @@ fieldNames = Object.freeze({
     function getURL(link)
     {
         let resultUrl;
-        if (typeof (link.href !== "undefined")) {
+        if (typeof (link.href) !== "undefined") {
             resultUrl = link.href;
         } else {
             let nextText = link.innerHTML;
